@@ -1,49 +1,67 @@
 #include "ESP8266WiFi.h"
+#include <SPI.h>
+#include <SD.h>
+
 int incomingByte = 0;
 String dataRecived="";
 String fileName="";
 String lastData="";
-
+int numberNetwork=0;
+const int chipSelect = D2;
 void setup() {
 
   Serial.begin(115200);//abro el puerto serie
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
   delay(100);
-
+  numberNetwork=WiFi.scanNetworks(false,true);//escaneo bloqueante de redes wifi, incluyendo las ocultas
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Card failed, or not present");
+    // don't do anything more:
+    while (1);
+  }
 }
+File dataFile;
 
 void loop() {
- // int numberNetwork=WiFi.scanNetworks(false,true);//escaneo bloqueante de redes wifi, incluyendo las ocultas
+   
+  
+  
   if(Serial.available())
   {
     dataRecived="";
   }
   while(Serial.available())//chequeo si llego informacion por serial, y si llego vacio el buffer
   {
-       dataRecived=dataRecived+Serial.readString();
+    String temp=Serial.readString();
+
+      dataRecived=dataRecived+temp;
+      dataRecived.remove((dataRecived.length())-1);
+   
+     
        
       
   }
   if(dataRecived!="")
   {
 
-    if(strcmp(dataRecived.c_str(), "sn")>0)
-    {
+    if(dataRecived == "m") {
+      numberNetwork=WiFi.scanNetworks(false,true);
+     // Serial.println(fileName);
+      for(int i=0;i<numberNetwork; i++)//itero en todas las redes que hay y las guardo en un archibo
+      {
+        //dataFile=SD.open((fileName+String(".csv")).c_str(), FILE_WRITE);//abro o creo el archivo csv en modo escritura
+        dataFile=SD.open(fileName.c_str(), FILE_WRITE);
+        dataFile.println(WiFi.SSID(i)+","+String(WiFi.RSSI(i))+","+String(WiFi.channel(i)));
+        //Serial.println(WiFi.SSID(i)+","+String(WiFi.RSSI(i))+","+String(WiFi.channel(i)));
+        dataFile.close();
+      }
+                
+    
+  
+    }else if(lastData=="sn"){
       
-      Serial.println("llego sn");
-      
-    }else if(strcmp(dataRecived.c_str(), "m")>0)
-    {
-      
-      Serial.println("llego m");
-    }else if(strcmp(dataRecived.c_str(), "s")>0)
-    {
-      
-      Serial.println("llego s");
-    }else if(strcmp(lastData.c_str(), "sn")>0){
-      fileName=dataRecived;
-      Serial.println(fileName);
+      fileName=dataRecived+String(".csv");
     }
 
  
