@@ -9,8 +9,9 @@ String lastData="";
 int numberNetwork=0;
 const int chipSelect = D2;
 void setup() {
-
-  Serial.begin(115200);//abro el puerto serie
+  pinMode(D1,OUTPUT);
+  digitalWrite(D1,LOW);
+  Serial.begin(9600);//abro el puerto serie
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
   delay(100);
@@ -36,7 +37,7 @@ void loop() {
     String temp=Serial.readString();
 
       dataRecived=dataRecived+temp;
-      dataRecived.remove((dataRecived.length())-1);
+      //dataRecived.remove((dataRecived.length())-1); // descomentar si se maneja por consola
    
      
        
@@ -44,18 +45,22 @@ void loop() {
   }
   if(dataRecived!="")
   {
+    Serial.println(dataRecived);
 
     if(dataRecived == "m") {
       numberNetwork=WiFi.scanNetworks(false,true);
      // Serial.println(fileName);
+      digitalWrite(D1,HIGH);
       for(int i=0;i<numberNetwork; i++)//itero en todas las redes que hay y las guardo en un archibo
       {
+        
         //dataFile=SD.open((fileName+String(".csv")).c_str(), FILE_WRITE);//abro o creo el archivo csv en modo escritura
         dataFile=SD.open(fileName.c_str(), FILE_WRITE);
         dataFile.println(WiFi.SSID(i)+","+String(WiFi.RSSI(i))+","+String(WiFi.channel(i)));
         //Serial.println(WiFi.SSID(i)+","+String(WiFi.RSSI(i))+","+String(WiFi.channel(i)));
         dataFile.close();
       }
+      digitalWrite(D1,LOW);
                 
     
   
